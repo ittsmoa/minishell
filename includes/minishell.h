@@ -40,5 +40,12 @@ char	*get_env_value(char **envp, char *name);
 char	*get_cmd_path(char *cmd, char **envp);
 int	is_builtin(char *cmd);
 int	execute_builtin(t_shell *shell, t_cmd *cmd);
+int	builtin_cd(t_shell *shell, t_cmd *cmd);
+int	set_env_value(char ***envp, char *key, char *value);
+
+char	**copy_envp(char **envp);
+void	free_envp(char **envp);
+char	*get_env_value(char **envp, char *key);
+int	set_env_value(char ***envp, char *key, char *value);
 
 #endif

@@ -14,7 +14,10 @@ SRC = src/main.c \
       src/executor/execute_builtin.c \
       src/builtins/builtin_pwd.c \
       src/builtins/builtin_echo.c \
-      src/builtins/builtin_env.c
+      src/builtins/builtin_env.c \
+      src/env/copy_envp.c \
+      src/env/env_get.c \
+      src/env/env_set.c 
 
 OBJ = $(SRC:.c=.o)
 

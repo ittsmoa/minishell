@@ -8,10 +8,13 @@ int	main(int argc, char **argv, char **envp)
 
 	(void)argc;
 	(void)argv;
-	shell.envp = envp;
+	shell.envp = copy_envp(envp);
 	shell.exit_status = 0;
 	cmd.argv = args;
 	cmd.next = NULL;
 	execute(&shell, &cmd);
+	set_env_value(&shell.envp, "PWD", "/test");
+	printf("PWD = %s\n", get_env_value(shell.envp, "PWD"));
+	free_envp(shell.envp);
 	return (shell.exit_status);
 }
