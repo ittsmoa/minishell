@@ -17,7 +17,13 @@ SRC = src/main.c \
       src/builtins/builtin_env.c \
       src/env/copy_envp.c \
       src/env/env_get.c \
-      src/env/env_set.c 
+      src/env/env_set.c \
+      src/builtins/builtin_cd.c \
+      src/env/env_add.c \
+      src/builtins/builtin_export.c \
+      src/env/env_remove.c \
+      src/builtins/builtin_unset.c \
+      src/builtins/builtin_exit.c 
 
 OBJ = $(SRC:.c=.o)
 
