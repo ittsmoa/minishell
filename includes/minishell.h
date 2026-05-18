@@ -21,6 +21,8 @@
 # include <stdio.h>
 # include <sys/wait.h>
 # include "../libft/libft.h"
+# include <readline/readline.h>
+# include <readline/history.h>
 
 /* ************************************************************************** */
 /*                                  Structs                                   */
@@ -70,5 +72,7 @@ char	*get_env_value(char **envp, char *key);
 int		set_env_value(char ***envp, char *key, char *value);
 int		add_env_value(char ***envp, char *new_var);
 int		remove_env_value(char ***envp, char *key);
+
+void	free_split(char **res, int size);
 
 #endif
