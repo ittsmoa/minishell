@@ -23,6 +23,7 @@
 # include "../libft/libft.h"
 # include <readline/readline.h>
 # include <readline/history.h>
+# include <fcntl.h>
 
 /* ************************************************************************** */
 /*                                  Structs                                   */
@@ -31,6 +32,7 @@
 typedef struct s_cmd
 {
 	char			**argv;
+	int				outfile;
 	struct s_cmd	*next;
 }	t_cmd;
 

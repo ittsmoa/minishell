@@ -22,6 +22,7 @@ static int	handle_line(t_shell *shell, char *line)
 	add_history(line);
 	cmd.argv = ft_split(line, ' ');
 	cmd.next = NULL;
+	cmd.outfile = -1; // tempppp
 	if (!cmd.argv)
 		return (0);
 	execute(shell, &cmd);
