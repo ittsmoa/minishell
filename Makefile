@@ -12,6 +12,8 @@ SRC = src/main.c \
       src/executor/get_cmd_path.c \
       src/executor/is_builtin.c \
       src/executor/execute_builtin.c \
+      src/executor/execute_pipeline.c \
+      src/executor/command_redirection.c \
       src/builtins/builtin_pwd.c \
       src/builtins/builtin_echo.c \
       src/builtins/builtin_env.c \
@@ -23,7 +25,8 @@ SRC = src/main.c \
       src/builtins/builtin_export.c \
       src/env/env_remove.c \
       src/builtins/builtin_unset.c \
-      src/builtins/builtin_exit.c 
+      src/builtins/builtin_exit.c \
+      src/utils/temp_parser.c 
 
 OBJ = $(SRC:.c=.o)
 

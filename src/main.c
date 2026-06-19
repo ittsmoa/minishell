@@ -1,13 +1,5 @@
 #include "../includes/minishell.h"
 
-static void	free_cmd(t_cmd *cmd)
-{
-	if (!cmd)
-		return ;
-	if (cmd->argv)
-		free_split(cmd->argv, -1);
-}
-
 static int	handle_line(t_shell *shell, char *line)
 {
 	t_cmd	cmd;
@@ -20,9 +12,7 @@ static int	handle_line(t_shell *shell, char *line)
 	if (line[0] == '\0')
 		return (0);
 	add_history(line);
-	cmd.argv = ft_split(line, ' ');
-	cmd.next = NULL;
-	cmd.outfile = -1; // tempppp
+	cmd = temp_parse_line(line);
 	if (!cmd.argv)
 		return (0);
 	execute(shell, &cmd);
@@ -48,5 +38,6 @@ int	main(int argc, char **argv, char **envp)
 		free(line);
 	}
 	free_envp(shell.envp);
+	rl_clear_history();
 	return (shell.exit_status);
 }

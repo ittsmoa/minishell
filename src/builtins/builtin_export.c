@@ -41,6 +41,8 @@ static int	print_export(t_shell *shell)
 {
 	int	i;
 
+	if (!shell || !shell->envp)
+		return (1);
 	i = 0;
 	while (shell->envp[i])
 	{
