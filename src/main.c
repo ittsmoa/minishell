@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/09 00:00:00 by moatieh           #+#    #+#             */
+/*   Updated: 2026/07/09 00:00:00 by moatieh          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/minishell.h"
 
 static int	handle_line(t_shell *shell, char *line)
@@ -14,7 +26,10 @@ static int	handle_line(t_shell *shell, char *line)
 	add_history(line);
 	cmd = temp_parse_line(line);
 	if (!cmd.argv)
+	{
+		shell->exit_status = 1;
 		return (0);
+	}
 	execute(shell, &cmd);
 	free_cmd(&cmd);
 	return (0);

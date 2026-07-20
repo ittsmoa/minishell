@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute_pipeline.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/09 00:00:00 by moatieh           #+#    #+#             */
+/*   Updated: 2026/07/09 00:00:00 by moatieh          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
 static int	count_commands(t_cmd *cmd)
@@ -13,123 +25,71 @@ static int	count_commands(t_cmd *cmd)
 	return (count);
 }
 
-static void	close_pipe(int pipe_fd[2])
-{
-	if (pipe_fd[0] != -1)
-		close(pipe_fd[0]);
-	if (pipe_fd[1] != -1)
-		close(pipe_fd[1]);
-	pipe_fd[0] = -1;
-	pipe_fd[1] = -1;
-}
-
-static void	setup_pipeline_fds(t_cmd *cmd, int prev_fd, int pipe_fd[2])
-{
-	if (prev_fd != -1 && cmd->infile == -1)
-	{
-		if (dup2(prev_fd, STDIN_FILENO) == -1)
-			exit(1);
-	}
-	if (cmd->next && cmd->outfile == -1)
-	{
-		if (dup2(pipe_fd[1], STDOUT_FILENO) == -1)
-			exit(1);
-	}
-	if (prev_fd != -1)
-		close(prev_fd);
-	close_pipe(pipe_fd);
-	apply_child_redirection(cmd);
-}
-
-static void	close_other_command_fds(t_cmd *head, t_cmd *current)
-{
-	while (head)
-	{
-		if (head != current)
-			close_command_fds(head);
-		head = head->next;
-	}
-}
-
 static void	run_pipeline_child(t_shell *shell, t_cmd *cmd)
 {
 	char	*path;
 	int		status;
 
 	if (is_builtin(cmd->argv[0]))
-	{
-		status = execute_builtin(shell, cmd);
-		exit(status);
-	}
+		exit(execute_builtin(shell, cmd));
 	path = get_cmd_path(cmd->argv[0], shell->envp);
 	if (!path)
-	{
-		perror(cmd->argv[0]);
-		exit(127);
-	}
+		exit(print_command_error(cmd->argv[0]));
 	execve(path, cmd->argv, shell->envp);
+	status = get_execve_error_status();
 	perror(cmd->argv[0]);
 	free(path);
-	exit(127);
+	exit(status);
 }
 
-static int	fork_pipeline_command(t_shell *shell, t_cmd *head, t_cmd *cmd,
-		int *prev_fd, pid_t *pid)
+static int	fork_command(t_shell *shell, t_cmd *head, t_cmd *cmd,
+		t_pipeline *pipeline)
 {
 	int	pipe_fd[2];
 
-	pipe_fd[0] = -1;
-	pipe_fd[1] = -1;
+	init_pipe_fds(pipe_fd);
 	if (cmd->next && pipe(pipe_fd) == -1)
 		return (perror("pipe"), 1);
-	*pid = fork();
-	if (*pid == -1)
-		return (close_pipe(pipe_fd), perror("fork"), 1);
-	if (*pid == 0)
+	pipeline->pids[pipeline->started] = fork();
+	if (pipeline->pids[pipeline->started] == -1)
+		return (close_pipeline_fds(NULL, pipe_fd[0]), close(pipe_fd[1]),
+			perror("fork"), 1);
+	if (pipeline->pids[pipeline->started] == 0)
 	{
-		setup_pipeline_fds(cmd, *prev_fd, pipe_fd);
+		setup_pipeline_fds(cmd, pipeline, pipe_fd);
 		close_other_command_fds(head, cmd);
 		run_pipeline_child(shell, cmd);
 	}
-	if (*prev_fd != -1)
-		close(*prev_fd);
+	if (pipeline->prev_fd != -1)
+		close(pipeline->prev_fd);
 	if (pipe_fd[1] != -1)
 		close(pipe_fd[1]);
-	*prev_fd = pipe_fd[0];
+	pipeline->prev_fd = pipe_fd[0];
+	pipeline->started++;
 	close_command_fds(cmd);
 	return (0);
 }
 
 int	execute_pipeline(t_shell *shell, t_cmd *cmd)
 {
-	pid_t	*pids;
-	t_cmd	*current;
-	int		prev_fd;
-	int		count;
-	int		i;
-	int		status;
+	t_pipeline	pipeline;
+	t_cmd		*current;
+	int			failed;
 
-	count = count_commands(cmd);
-	pids = malloc(sizeof(pid_t) * count);
-	if (!pids)
+	if (init_pipeline(shell, &pipeline, count_commands(cmd)))
 		return (1);
-	prev_fd = -1;
 	current = cmd;
-	i = 0;
-	while (current)
+	failed = 0;
+	while (current && !failed)
 	{
-		if (fork_pipeline_command(shell, cmd, current, &prev_fd, &pids[i]))
-			return (free(pids), 1);
-		current = current->next;
-		i++;
+		failed = fork_command(shell, cmd, current, &pipeline);
+		if (!failed)
+			current = current->next;
 	}
-	if (prev_fd != -1)
-		close(prev_fd);
-	i = 0;
-	while (i < count)
-		waitpid(pids[i++], &status, 0);
-	free(pids);
-	if (WIFEXITED(status))
-		shell->exit_status = WEXITSTATUS(status);
+	close_pipeline_fds(current, pipeline.prev_fd);
+	shell->exit_status = wait_pipeline(&pipeline);
+	free(pipeline.pids);
+	if (failed)
+		shell->exit_status = 1;
 	return (shell->exit_status);
 }

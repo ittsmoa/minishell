@@ -38,35 +38,58 @@ static void	free_paths(char **paths)
 	free(paths);
 }
 
-char	*get_cmd_path(char *cmd, char **envp)
+static char	*get_direct_path(char *cmd)
 {
-	char	**paths;
-	char	*path_env;
-	char	*full_path;
-	int		i;
-
-	if (!cmd || !envp)
+	if (!ft_strchr(cmd, '/'))
 		return (NULL);
 	if (access(cmd, X_OK) == 0)
 		return (ft_strdup(cmd));
-	path_env = get_env_value(envp, "PATH");
-	if (!path_env)
-		return (NULL);
-	paths = ft_split(path_env, ':');
-	if (!paths)
-		return (NULL);
+	return (NULL);
+}
+
+static char	*search_paths(char **paths, char *cmd)
+{
+	char	*full_path;
+	char	*found_path;
+	int		i;
+
+	found_path = NULL;
 	i = 0;
 	while (paths[i])
 	{
 		full_path = join_path(paths[i], cmd);
 		if (full_path && access(full_path, X_OK) == 0)
 		{
-			free_paths(paths);
+			free(found_path);
 			return (full_path);
 		}
-		free(full_path);
+		if (full_path && !found_path && access(full_path, F_OK) == 0)
+			found_path = full_path;
+		else
+			free(full_path);
 		i++;
 	}
+	return (found_path);
+}
+
+char	*get_cmd_path(char *cmd, char **envp)
+{
+	char	**paths;
+	char	*path_env;
+	char	*full_path;
+
+	if (!cmd || !envp)
+		return (NULL);
+	full_path = get_direct_path(cmd);
+	if (full_path || ft_strchr(cmd, '/'))
+		return (full_path);
+	path_env = get_env_value(envp, "PATH");
+	if (!path_env)
+		return (NULL);
+	paths = ft_split(path_env, ':');
+	if (!paths)
+		return (NULL);
+	full_path = search_paths(paths, cmd);
 	free_paths(paths);
-	return (NULL);
+	return (full_path);
 }

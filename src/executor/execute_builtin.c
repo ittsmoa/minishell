@@ -1,13 +1,25 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute_builtin.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/09 00:00:00 by moatieh           #+#    #+#             */
+/*   Updated: 2026/07/09 00:00:00 by moatieh          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minishell.h"
 
 static int	run_builtin(t_shell *shell, t_cmd *cmd)
 {
 	if (ft_strncmp(cmd->argv[0], "pwd", 4) == 0)
-		return (builtin_pwd());
+		return (builtin_pwd(cmd));
 	if (ft_strncmp(cmd->argv[0], "echo", 5) == 0)
 		return (builtin_echo(cmd));
 	if (ft_strncmp(cmd->argv[0], "env", 4) == 0)
-		return (builtin_env(shell));
+		return (builtin_env(shell, cmd));
 	if (ft_strncmp(cmd->argv[0], "cd", 3) == 0)
 		return (builtin_cd(shell, cmd));
 	if (ft_strncmp(cmd->argv[0], "export", 7) == 0)

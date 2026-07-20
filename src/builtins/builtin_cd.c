@@ -54,6 +54,16 @@ static int	add_pwd_value(t_shell *shell, char *key, char *value)
 	return (status);
 }
 
+static int	update_pwd_value(t_shell *shell, char *key, char *value)
+{
+	if (set_env_value(&shell->envp, key, value))
+	{
+		if (add_pwd_value(shell, key, value))
+			return (1);
+	}
+	return (0);
+}
+
 int	builtin_cd(t_shell *shell, t_cmd *cmd)
 {
 	char	oldpwd[1024];
@@ -74,15 +84,9 @@ int	builtin_cd(t_shell *shell, t_cmd *cmd)
 		return (cd_error(path));
 	if (!getcwd(newpwd, sizeof(newpwd)))
 		return (cd_error("getcwd"));
-	if (set_env_value(&shell->envp, "OLDPWD", oldpwd))
-	{
-		if (add_pwd_value(shell, "OLDPWD", oldpwd))
-			return (1);
-	}
-	if (set_env_value(&shell->envp, "PWD", newpwd))
-	{
-		if (add_pwd_value(shell, "PWD", newpwd))
-			return (1);
-	}
+	if (update_pwd_value(shell, "OLDPWD", oldpwd))
+		return (1);
+	if (update_pwd_value(shell, "PWD", newpwd))
+		return (1);
 	return (0);
 }

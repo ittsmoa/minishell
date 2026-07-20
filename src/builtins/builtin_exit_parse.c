@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   builtin_echo.c                                     :+:      :+:    :+:   */
+/*   builtin_exit_parse.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,42 +12,58 @@
 
 #include "../../includes/minishell.h"
 
-static int	is_n_option(char *arg)
+int	exit_is_numeric_arg(char *arg)
 {
 	int	i;
 
-	if (!arg || arg[0] != '-' || arg[1] != 'n')
+	i = 0;
+	if (arg[i] == '+' || arg[i] == '-')
+		i++;
+	if (!arg[i])
 		return (0);
-	i = 2;
 	while (arg[i])
 	{
-		if (arg[i] != 'n')
+		if (!ft_isdigit(arg[i]))
 			return (0);
 		i++;
 	}
 	return (1);
 }
 
-int	builtin_echo(t_cmd *cmd)
+static unsigned long long	get_exit_limit(char *arg, int *i, int *sign)
 {
-	int	i;
-	int	newline;
+	*sign = 1;
+	*i = 0;
+	if (arg[*i] == '+' || arg[*i] == '-')
+	{
+		if (arg[*i] == '-')
+			*sign = -1;
+		(*i)++;
+	}
+	if (*sign == -1)
+		return (9223372036854775808ULL);
+	return (9223372036854775807ULL);
+}
 
-	i = 1;
-	newline = 1;
-	while (cmd->argv[i] && is_n_option(cmd->argv[i]))
+int	parse_exit_value(char *arg, int *status)
+{
+	unsigned long long	value;
+	unsigned long long	limit;
+	int					sign;
+	int					i;
+
+	value = 0;
+	limit = get_exit_limit(arg, &i, &sign);
+	while (arg[i])
 	{
-		newline = 0;
+		if (value > (limit - (arg[i] - '0')) / 10)
+			return (1);
+		value = value * 10 + (arg[i] - '0');
 		i++;
 	}
-	while (cmd->argv[i])
-	{
-		printf("%s", cmd->argv[i]);
-		if (cmd->argv[i + 1])
-			printf(" ");
-		i++;
-	}
-	if (newline)
-		printf("\n");
+	if (sign == -1)
+		*status = (unsigned char)(0 - (value % 256));
+	else
+		*status = (unsigned char)(value % 256);
 	return (0);
 }

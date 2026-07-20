@@ -34,7 +34,8 @@ char	*get_env_value(char **envp, char *key)
 	while (envp[i])
 	{
 		if (env_key_len(envp[i]) == len
-			&& ft_strncmp(envp[i], key, len) == 0)
+			&& ft_strncmp(envp[i], key, len) == 0
+			&& envp[i][len] == '=')
 			return (envp[i] + len + 1);
 		i++;
 	}

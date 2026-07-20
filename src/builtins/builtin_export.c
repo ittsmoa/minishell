@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/16 13:02:09 by moatieh           #+#    #+#             */
-/*   Updated: 2026/05/16 13:02:09 by moatieh          ###   ########.fr       */
+/*   Created: 2026/07/09 00:00:00 by moatieh           #+#    #+#             */
+/*   Updated: 2026/07/09 00:00:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,9 @@ static int	is_valid_identifier(char *arg)
 {
 	int	i;
 
-	i = 0;
-	if (!arg || !arg[0] || arg[0] == '=')
+	if (!arg || !arg[0] || (!ft_isalpha(arg[0]) && arg[0] != '_'))
 		return (0);
-	if (!ft_isalpha(arg[0]) && arg[0] != '_')
-		return (0);
+	i = 1;
 	while (arg[i] && arg[i] != '=')
 	{
 		if (!ft_isalnum(arg[i]) && arg[i] != '_')
@@ -32,21 +30,25 @@ static int	is_valid_identifier(char *arg)
 
 static void	export_error(char *arg)
 {
-	write(2, "minishell: export: `", 20);
-	write(2, arg, ft_strlen(arg));
-	write(2, "': not a valid identifier\n", 26);
+	ft_putstr_fd("minishell: export: `", 2);
+	ft_putstr_fd(arg, 2);
+	ft_putstr_fd("': not a valid identifier\n", 2);
 }
 
-static int	print_export(t_shell *shell)
+static int	env_has_key(char **envp, char *arg)
 {
+	int	len;
 	int	i;
 
-	if (!shell || !shell->envp)
-		return (1);
+	len = 0;
+	while (arg[len] && arg[len] != '=')
+		len++;
 	i = 0;
-	while (shell->envp[i])
+	while (envp[i])
 	{
-		printf("declare -x %s\n", shell->envp[i]);
+		if (!ft_strncmp(envp[i], arg, len)
+			&& (envp[i][len] == '=' || envp[i][len] == '\0'))
+			return (1);
 		i++;
 	}
 	return (0);
@@ -56,20 +58,23 @@ static int	export_arg(t_shell *shell, char *arg)
 {
 	char	*key;
 	char	*equal;
-	int		ret;
+	int		status;
 
 	equal = ft_strchr(arg, '=');
 	if (!equal)
+	{
+		if (!env_has_key(shell->envp, arg))
+			return (add_env_value(&shell->envp, arg));
 		return (0);
+	}
 	key = ft_substr(arg, 0, equal - arg);
 	if (!key)
 		return (1);
-	if (get_env_value(shell->envp, key))
-		ret = set_env_value(&shell->envp, key, equal + 1);
-	else
-		ret = add_env_value(&shell->envp, arg);
+	status = set_env_value(&shell->envp, key, equal + 1);
+	if (status)
+		status = add_env_value(&shell->envp, arg);
 	free(key);
-	return (ret);
+	return (status);
 }
 
 int	builtin_export(t_shell *shell, t_cmd *cmd)
@@ -92,6 +97,5 @@ int	builtin_export(t_shell *shell, t_cmd *cmd)
 			status = 1;
 		i++;
 	}
-	shell->exit_status = status;
 	return (status);
 }
