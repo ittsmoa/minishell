@@ -1,7 +1,7 @@
 NAME = minishell
 
 CC = cc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -Iincludes -Ilibft
 
 LIBFT_DIR = libft
 LIBFT = $(LIBFT_DIR)/libft.a
@@ -17,6 +17,7 @@ SRC = src/main.c \
       src/executor/pipeline_status.c \
       src/executor/execution_status.c \
       src/executor/command_redirection.c \
+      src/executor/prepare_redirections.c \
       src/builtins/builtin_pwd.c \
       src/builtins/builtin_echo.c \
       src/builtins/builtin_env.c \
@@ -31,20 +32,33 @@ SRC = src/main.c \
       src/builtins/builtin_unset.c \
       src/builtins/builtin_exit.c \
       src/builtins/builtin_exit_parse.c \
-      src/utils/temp_parser.c \
-      src/utils/temp_parser_redirection.c \
-      src/utils/temp_parser_segment.c \
-      src/utils/temp_parser_parse.c 
+      parser/lexer.c \
+      parser/utilities_1.c \
+      parser/validation.c \
+      parser/utilities_2.c \
+      parser/parsing.c \
+      parser/parsing_helper.c \
+      parser/parsing_helper2.c \
+      parser/parsing_helper3.c \
+      parser/parser_validation.c \
+      parser/expander_env.c \
+      parser/expander_utilities.c \
+      parser/expander_utilities2.c \
+      parser/expander.c
 
 OBJ = $(SRC:.c=.o)
+LDFLAGS = -lreadline
 
 all: $(NAME)
 
 $(NAME): $(LIBFT) $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) -lreadline -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) $(LDFLAGS) -o $(NAME)
 
 $(LIBFT):
 	make -C $(LIBFT_DIR)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	make clean -C $(LIBFT_DIR)
