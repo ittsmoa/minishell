@@ -14,7 +14,7 @@
 
 int	builtin_exit(t_shell *shell)
 {
-	int	status;
+	int status;
 
 	status = shell->exit_status;
 	write(1, "exit\n", 5);

@@ -2,8 +2,8 @@
 
 int	builtin_echo(t_cmd *cmd)
 {
-	int	i;
-	int	newline;
+	int i;
+	int newline;
 
 	i = 1;
 	newline = 1;

@@ -37,9 +37,9 @@ static char	*join_env(char *key, char *value)
 
 int	set_env_value(char ***envp, char *key, char *value)
 {
-	int		i;
-	int		len;
-	char	*new_env;
+	int i;
+	int len;
+	char *new_env;
 
 	if (!envp || !*envp || !key || !value)
 		return (1);
@@ -47,8 +47,8 @@ int	set_env_value(char ***envp, char *key, char *value)
 	len = ft_strlen(key);
 	while ((*envp)[i])
 	{
-		if (env_key_len((*envp)[i]) == len
-			&& ft_strncmp((*envp)[i], key, len) == 0)
+		if (env_key_len((*envp)[i]) == len && ft_strncmp((*envp)[i], key,
+				len) == 0)
 		{
 			new_env = join_env(key, value);
 			if (!new_env)

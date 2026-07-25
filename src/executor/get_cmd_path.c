@@ -40,10 +40,10 @@ static void	free_paths(char **paths)
 
 char	*get_cmd_path(char *cmd, char **envp)
 {
-	char	**paths;
-	char	*path_env;
-	char	*full_path;
-	int		i;
+	char **paths;
+	char *path_env;
+	char *full_path;
+	int i;
 
 	if (!cmd || !envp)
 		return (NULL);

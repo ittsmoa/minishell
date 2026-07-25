@@ -39,8 +39,8 @@ static void	unset_error(char *arg)
 
 int	builtin_unset(t_shell *shell, t_cmd *cmd)
 {
-	int	i;
-	int	status;
+	int i;
+	int status;
 
 	i = 1;
 	status = 0;

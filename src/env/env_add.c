@@ -24,8 +24,8 @@ static int	env_count(char **envp)
 
 int	add_env_value(char ***envp, char *new_var)
 {
-	char	**new_envp;
-	int		i;
+	char **new_envp;
+	int i;
 
 	if (!envp || !*envp || !new_var)
 		return (1);

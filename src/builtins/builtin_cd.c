@@ -38,9 +38,9 @@ static char	*get_cd_path(t_shell *shell, t_cmd *cmd)
 
 int	builtin_cd(t_shell *shell, t_cmd *cmd)
 {
-	char	oldpwd[1024];
-	char	newpwd[1024];
-	char	*path;
+	char oldpwd[1024];
+	char newpwd[1024];
+	char *path;
 
 	path = get_cd_path(shell, cmd);
 	if (!path)

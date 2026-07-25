@@ -72,8 +72,8 @@ static int	export_arg(t_shell *shell, char *arg)
 
 int	builtin_export(t_shell *shell, t_cmd *cmd)
 {
-	int	i;
-	int	status;
+	int i;
+	int status;
 
 	if (!cmd->argv[1])
 		return (print_export(shell));

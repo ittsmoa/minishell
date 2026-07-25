@@ -37,8 +37,8 @@ void	free_envp(char **envp)
 
 char	**copy_envp(char **envp)
 {
-	char	**copy;
-	int		i;
+	char **copy;
+	int i;
 
 	copy = malloc(sizeof(char *) * (env_count(envp) + 1));
 	if (!copy)

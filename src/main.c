@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/19 20:03:56 by maradweh          #+#    #+#             */
+/*   Updated: 2026/06/19 20:03:56 by maradweh         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/minishell.h"
 
 static void	free_cmd(t_cmd *cmd)
@@ -31,9 +43,9 @@ static int	handle_line(t_shell *shell, char *line)
 
 int	main(int argc, char **argv, char **envp)
 {
-	t_shell	shell;
-	char	*line;
-	int		should_exit;
+	t_shell shell;
+	char *line;
+	int should_exit;
 
 	(void)argc;
 	(void)argv;

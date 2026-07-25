@@ -2,7 +2,7 @@
 
 int	builtin_env(t_shell *shell)
 {
-	int	i;
+	int i;
 
 	i = 0;
 	while (shell->envp[i])

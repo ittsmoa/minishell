@@ -24,8 +24,8 @@ static int	env_key_len(char *env)
 
 char	*get_env_value(char **envp, char *key)
 {
-	int	i;
-	int	len;
+	int i;
+	int len;
 
 	if (!envp || !key)
 		return (NULL);
@@ -33,8 +33,7 @@ char	*get_env_value(char **envp, char *key)
 	len = ft_strlen(key);
 	while (envp[i])
 	{
-		if (env_key_len(envp[i]) == len
-			&& ft_strncmp(envp[i], key, len) == 0)
+		if (env_key_len(envp[i]) == len && ft_strncmp(envp[i], key, len) == 0)
 			return (envp[i] + len + 1);
 		i++;
 	}
