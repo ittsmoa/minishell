@@ -17,6 +17,7 @@ SRC = src/main.c \
       src/executor/pipeline_status.c \
       src/executor/execution_status.c \
       src/executor/command_redirection.c \
+      src/executor/prepare_redirections.c \
       src/builtins/builtin_pwd.c \
       src/builtins/builtin_echo.c \
       src/builtins/builtin_env.c \

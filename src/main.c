@@ -6,13 +6,13 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 19:48:18 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/25 19:48:28 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/25 20:10:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/minishell.h"
 
-static int	parse_and_execute(t_shell *shell, char *line)
+static t_cmd	*build_command(t_shell *shell, char *line)
 {
 	t_token	*tokens;
 	t_cmd	*cmd;
@@ -20,18 +20,34 @@ static int	parse_and_execute(t_shell *shell, char *line)
 
 	tokens = lexer_line(line);
 	if (!tokens)
-		return (1);
+		return (NULL);
 	if (!ft_is_valid(tokens, shell))
-		return (free_tokens(&tokens), 1);
+		return (free_tokens(&tokens), NULL);
 	env = read_env(shell->envp);
 	if (!env)
-		return (free_tokens(&tokens), 1);
+		return (free_tokens(&tokens), NULL);
 	expand_tokens(tokens, env, shell);
 	free_env(env);
 	cmd = parse_tokens(tokens);
 	free_tokens(&tokens);
 	if (!cmd || cmd_validation(cmd))
-		return (free_cmd(cmd), 1);
+		return (free_cmd(cmd), NULL);
+	return (cmd);
+}
+
+static int	parse_and_execute(t_shell *shell, char *line)
+{
+	t_cmd	*cmd;
+
+	cmd = build_command(shell, line);
+	if (!cmd)
+		return (shell->exit_status = 1, 1);
+	if (prepare_command_redirections(cmd))
+	{
+		shell->exit_status = 1;
+		free_cmd(cmd);
+		return (1);
+	}
 	execute(shell, cmd);
 	free_cmd(cmd);
 	return (0);

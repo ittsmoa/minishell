@@ -105,6 +105,7 @@ void	close_other_command_fds(t_cmd *head, t_cmd *current);
 void	close_pipeline_fds(t_cmd *cmd, int prev_fd);
 int		init_pipeline(t_shell *shell, t_pipeline *pipeline, int count);
 int		wait_pipeline(t_pipeline *pipeline);
+int		prepare_command_redirections(t_cmd *cmd);
 
 /* Builtins */
 int		builtin_echo(t_cmd *cmd);

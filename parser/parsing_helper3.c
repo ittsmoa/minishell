@@ -49,6 +49,7 @@ void	free_cmd(t_cmd *cmd)
 	while (cmd)
 	{
 		tmp = cmd->next;
+		close_command_fds(cmd);
 		free_argv(cmd->argv);
 		free_redir(cmd->redirs);
 		free(cmd);
@@ -83,7 +84,7 @@ char	*remove_quotes(char *argv)
 	}
 	new[j] = '\0';
 	return (new);
-}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+}
 
 int	count_arg(char **arg)
 {

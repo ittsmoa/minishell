@@ -100,6 +100,8 @@ t_cmd	*new_cmd(void)
 		return (NULL);
 	cmd->argv = NULL;
 	cmd->redirs = NULL;
+	cmd->infile = -1;
+	cmd->outfile = -1;
 	cmd->next = NULL;
 	return (cmd);
 }
