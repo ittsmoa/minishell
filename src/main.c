@@ -5,17 +5,40 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/07/09 00:00:00 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/09 00:00:00 by moatieh          ###   ########.fr       */
+/*   Created: 2026/07/25 19:48:18 by moatieh           #+#    #+#             */
+/*   Updated: 2026/07/25 19:48:28 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/minishell.h"
 
+static int	parse_and_execute(t_shell *shell, char *line)
+{
+	t_token	*tokens;
+	t_cmd	*cmd;
+	t_env	*env;
+
+	tokens = lexer_line(line);
+	if (!tokens)
+		return (1);
+	if (!ft_is_valid(tokens, shell))
+		return (free_tokens(&tokens), 1);
+	env = read_env(shell->envp);
+	if (!env)
+		return (free_tokens(&tokens), 1);
+	expand_tokens(tokens, env, shell);
+	free_env(env);
+	cmd = parse_tokens(tokens);
+	free_tokens(&tokens);
+	if (!cmd || cmd_validation(cmd))
+		return (free_cmd(cmd), 1);
+	execute(shell, cmd);
+	free_cmd(cmd);
+	return (0);
+}
+
 static int	handle_line(t_shell *shell, char *line)
 {
-	t_cmd	cmd;
-
 	if (!line)
 	{
 		printf("exit\n");
@@ -24,14 +47,7 @@ static int	handle_line(t_shell *shell, char *line)
 	if (line[0] == '\0')
 		return (0);
 	add_history(line);
-	cmd = temp_parse_line(line);
-	if (!cmd.argv)
-	{
-		shell->exit_status = 1;
-		return (0);
-	}
-	execute(shell, &cmd);
-	free_cmd(&cmd);
+	parse_and_execute(shell, line);
 	return (0);
 }
 
