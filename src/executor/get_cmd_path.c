@@ -50,26 +50,18 @@ static char	*get_direct_path(char *cmd)
 static char	*search_paths(char **paths, char *cmd)
 {
 	char	*full_path;
-	char	*found_path;
 	int		i;
 
-	found_path = NULL;
 	i = 0;
 	while (paths[i])
 	{
 		full_path = join_path(paths[i], cmd);
 		if (full_path && access(full_path, X_OK) == 0)
-		{
-			free(found_path);
 			return (full_path);
-		}
-		if (full_path && !found_path && access(full_path, F_OK) == 0)
-			found_path = full_path;
-		else
-			free(full_path);
+		free(full_path);
 		i++;
 	}
-	return (found_path);
+	return (NULL);
 }
 
 char	*get_cmd_path(char *cmd, char **envp)

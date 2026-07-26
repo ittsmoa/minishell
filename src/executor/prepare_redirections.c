@@ -63,17 +63,5 @@ static int	prepare_one_command_redirs(t_cmd *cmd)
 
 int	prepare_command_redirections(t_cmd *cmd)
 {
-	t_cmd	*current;
-
-	current = cmd;
-	while (current)
-	{
-		if (prepare_one_command_redirs(current))
-		{
-			close_pipeline_fds(cmd, -1);
-			return (1);
-		}
-		current = current->next;
-	}
-	return (0);
+	return (prepare_one_command_redirs(cmd));
 }

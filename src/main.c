@@ -42,7 +42,7 @@ static int	parse_and_execute(t_shell *shell, char *line)
 	cmd = build_command(shell, line);
 	if (!cmd)
 		return (shell->exit_status = 1, 1);
-	if (prepare_command_redirections(cmd))
+	if (!cmd->next && prepare_command_redirections(cmd))
 	{
 		shell->exit_status = 1;
 		free_cmd(cmd);

@@ -36,6 +36,33 @@ void	apply_child_redirection(t_cmd *cmd)
 	}
 }
 
+void	execute_shell_script(t_shell *shell, t_cmd *cmd, char *path)
+{
+	char	**argv;
+	int		i;
+
+	argv = malloc(sizeof(char *) * (count_arg(cmd->argv) + 2));
+	if (!argv)
+	{
+		free(path);
+		exit(1);
+	}
+	argv[0] = "/bin/sh";
+	argv[1] = path;
+	i = 1;
+	while (cmd->argv[i])
+	{
+		argv[i + 1] = cmd->argv[i];
+		i++;
+	}
+	argv[i + 1] = NULL;
+	execve(argv[0], argv, shell->envp);
+	perror(argv[0]);
+	free(argv);
+	free(path);
+	exit(get_execve_error_status());
+}
+
 static void	child_process(t_shell *shell, t_cmd *cmd)
 {
 	char	*path;
@@ -46,6 +73,8 @@ static void	child_process(t_shell *shell, t_cmd *cmd)
 	if (!path)
 		exit(print_command_error(cmd->argv[0]));
 	execve(path, cmd->argv, shell->envp);
+	if (errno == ENOEXEC)
+		execute_shell_script(shell, cmd, path);
 	status = get_execve_error_status();
 	perror(cmd->argv[0]);
 	free(path);

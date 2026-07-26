@@ -36,6 +36,8 @@ static void	run_pipeline_child(t_shell *shell, t_cmd *cmd)
 	if (!path)
 		exit(print_command_error(cmd->argv[0]));
 	execve(path, cmd->argv, shell->envp);
+	if (errno == ENOEXEC)
+		execute_shell_script(shell, cmd, path);
 	status = get_execve_error_status();
 	perror(cmd->argv[0]);
 	free(path);
@@ -56,6 +58,8 @@ static int	fork_command(t_shell *shell, t_cmd *head, t_cmd *cmd,
 			perror("fork"), 1);
 	if (pipeline->pids[pipeline->started] == 0)
 	{
+		if (prepare_command_redirections(cmd))
+			exit(1);
 		setup_pipeline_fds(cmd, pipeline, pipe_fd);
 		close_other_command_fds(head, cmd);
 		run_pipeline_child(shell, cmd);

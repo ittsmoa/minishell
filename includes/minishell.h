@@ -88,6 +88,7 @@ typedef struct s_pipeline
 /* Executor */
 int		execute(t_shell *shell, t_cmd *cmd);
 int		execute_external(t_shell *shell, t_cmd *cmd);
+void	execute_shell_script(t_shell *shell, t_cmd *cmd, char *path);
 int		execute_builtin(t_shell *shell, t_cmd *cmd);
 int		execute_pipeline(t_shell *shell, t_cmd *cmd);
 int		is_builtin(char *cmd);
