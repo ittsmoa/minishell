@@ -6,7 +6,7 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 00:00:00 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/09 00:00:00 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/29 00:50:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,12 +42,12 @@ int	builtin_echo(t_cmd *cmd)
 	}
 	while (cmd->argv[i])
 	{
-		printf("%s", cmd->argv[i]);
+		ft_putstr_fd(cmd->argv[i], STDOUT_FILENO);
 		if (cmd->argv[i + 1])
-			printf(" ");
+			ft_putchar_fd(' ', STDOUT_FILENO);
 		i++;
 	}
 	if (newline)
-		printf("\n");
+		ft_putchar_fd('\n', STDOUT_FILENO);
 	return (0);
 }

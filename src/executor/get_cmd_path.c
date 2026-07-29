@@ -6,7 +6,7 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/16 11:52:22 by moatieh           #+#    #+#             */
-/*   Updated: 2026/05/16 11:52:22 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/29 01:35:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,36 +40,33 @@ static void	free_paths(char **paths)
 
 static char	*get_direct_path(char *cmd)
 {
+	struct stat	info;
+
 	if (!ft_strchr(cmd, '/'))
 		return (NULL);
-	if (access(cmd, X_OK) == 0)
+	if (access(cmd, X_OK) == 0 && (stat(cmd, &info) == -1
+			|| !S_ISDIR(info.st_mode)))
 		return (ft_strdup(cmd));
 	return (NULL);
 }
 
 static char	*search_paths(char **paths, char *cmd)
 {
-	char	*full_path;
-	char	*found_path;
-	int		i;
+	struct stat	info;
+	char		*full_path;
+	int			i;
 
-	found_path = NULL;
 	i = 0;
 	while (paths[i])
 	{
 		full_path = join_path(paths[i], cmd);
-		if (full_path && access(full_path, X_OK) == 0)
-		{
-			free(found_path);
+		if (full_path && access(full_path, X_OK) == 0
+			&& (stat(full_path, &info) == -1 || !S_ISDIR(info.st_mode)))
 			return (full_path);
-		}
-		if (full_path && !found_path && access(full_path, F_OK) == 0)
-			found_path = full_path;
-		else
-			free(full_path);
+		free(full_path);
 		i++;
 	}
-	return (found_path);
+	return (NULL);
 }
 
 char	*get_cmd_path(char *cmd, char **envp)
@@ -78,7 +75,7 @@ char	*get_cmd_path(char *cmd, char **envp)
 	char	*path_env;
 	char	*full_path;
 
-	if (!cmd || !envp)
+	if (!cmd || !envp || !cmd[0])
 		return (NULL);
 	full_path = get_direct_path(cmd);
 	if (full_path || ft_strchr(cmd, '/'))

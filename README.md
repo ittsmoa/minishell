@@ -16,13 +16,10 @@ The project practises the Unix process model and the foundations of a command in
 - Environment-variable expansion, including `$?`, with quote-aware expansion: variables expand outside quotes and inside double quotes, but not inside single quotes.
 - Single and double quotes for grouping arguments.
 - Pipelines with `|`.
-- Input redirection (`<`), output truncation (`>`), and output append (`>>`).
+- Interactive signal handling for Ctrl-C, Ctrl-D, and Ctrl-backslash.
+- Input redirection (<), heredocs (<<), output truncation (>), and output append (>>).
 - Basic syntax validation for misplaced pipes, redirections, quotes, and unsupported `&&` / `&` operators.
 - Lines beginning with `#` are treated as comments.
-
-### Current limitation
-
-The lexer recognises heredoc syntax (`<<`), but heredoc execution is not yet implemented. Using it reports `minishell: heredoc is not connected yet`.
 
 ## Instructions
 
@@ -93,7 +90,7 @@ Each entered line follows this flow:
 
 ```text
 Readline input -> lexer -> syntax validation -> expansion -> parser
--> redirection preparation -> builtin / external execution -> status update
+-> heredoc collection -> redirection preparation -> execution -> status update
 ```
 
 For pipelines, each command is executed in a separate child process connected by pipe file descriptors. Built-ins that need to alter the shell environment (`cd`, `export`, `unset`, and `exit`) execute in the parent process when they are not part of a pipeline.
@@ -107,7 +104,7 @@ For pipelines, each command is executed in a separate child process connected by
 
 ### Use of AI
 
-An AI assistant was used to inspect the repository and draft this README. It helped organise the documentation, describe the implemented components, and identify the heredoc limitation from the source code. No project source code was generated or modified for this documentation task; the authors reviewed the README content and remain responsible for the project.
+An AI assistant was used to review requirements, diagnose parser and executor behaviour, assist with implementation of expansion, signals, heredocs, redirections, pipelines, and memory cleanup, and run build, behavioural, and Valgrind tests. The authors reviewed the changes and remain responsible for the project.
 
 ## Authors
 

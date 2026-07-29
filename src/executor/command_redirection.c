@@ -88,4 +88,5 @@ void	close_command_fds(t_cmd *cmd)
 		close(cmd->outfile);
 		cmd->outfile = -1;
 	}
+	close_heredoc_fds(cmd->redirs);
 }

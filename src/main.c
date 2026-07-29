@@ -6,7 +6,7 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 19:48:18 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/25 20:10:00 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/29 01:25:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,22 +16,25 @@ static t_cmd	*build_command(t_shell *shell, char *line)
 {
 	t_token	*tokens;
 	t_cmd	*cmd;
-	t_env	*env;
 
 	tokens = lexer_line(line);
 	if (!tokens)
+	{
+		shell->exit_status = 2;
 		return (NULL);
+	}
 	if (!ft_is_valid(tokens, shell))
 		return (free_tokens(&tokens), NULL);
-	env = read_env(shell->envp);
-	if (!env)
+	if (expand_tokens(tokens, shell))
 		return (free_tokens(&tokens), NULL);
-	expand_tokens(tokens, env, shell);
-	free_env(env);
 	cmd = parse_tokens(tokens);
 	free_tokens(&tokens);
 	if (!cmd || cmd_validation(cmd))
-		return (free_cmd(cmd), NULL);
+	{
+		shell->exit_status = 1;
+		free_cmd(cmd);
+		return (NULL);
+	}
 	return (cmd);
 }
 
@@ -41,8 +44,10 @@ static int	parse_and_execute(t_shell *shell, char *line)
 
 	cmd = build_command(shell, line);
 	if (!cmd)
-		return (shell->exit_status = 1, 1);
-	if (prepare_command_redirections(cmd))
+		return (1);
+	if (prepare_heredocs(shell, cmd))
+		return (free_cmd(cmd), 1);
+	if (!cmd->next && prepare_command_redirections(cmd))
 	{
 		shell->exit_status = 1;
 		free_cmd(cmd);
@@ -53,14 +58,26 @@ static int	parse_and_execute(t_shell *shell, char *line)
 	return (0);
 }
 
+static int	is_ignored_line(char *line)
+{
+	while (*line == ' ' || *line == '\t')
+		line++;
+	return (*line == '\0' || *line == '#');
+}
+
 static int	handle_line(t_shell *shell, char *line)
 {
+	if (g_signal == SIGINT)
+	{
+		shell->exit_status = 130;
+		g_signal = 0;
+	}
 	if (!line)
 	{
-		printf("exit\n");
+		write(1, "exit\n", 5);
 		return (1);
 	}
-	if (line[0] == '\0')
+	if (is_ignored_line(line))
 		return (0);
 	add_history(line);
 	parse_and_execute(shell, line);
@@ -76,8 +93,12 @@ int	main(int argc, char **argv, char **envp)
 	(void)argc;
 	(void)argv;
 	shell.envp = copy_envp(envp);
+	if (!shell.envp)
+		return (1);
 	shell.exit_status = 0;
+	shell.child_mode = 0;
 	should_exit = 0;
+	set_interactive_signals();
 	while (!should_exit)
 	{
 		line = readline("minishell$ ");

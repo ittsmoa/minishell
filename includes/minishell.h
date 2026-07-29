@@ -18,11 +18,14 @@
 # include <fcntl.h>
 # include <readline/history.h>
 # include <readline/readline.h>
+# include <signal.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <sys/stat.h>
 # include <sys/wait.h>
 # include <unistd.h>
+
+extern volatile sig_atomic_t	g_signal;
 
 typedef enum e_quote
 {
@@ -45,6 +48,10 @@ typedef struct s_token
 {
 	t_type			type;
 	char			*value;
+	int				quoted;
+	int				skip;
+	int				ambiguous;
+	int				expanded;
 	struct s_token	*next;
 }	t_token;
 
@@ -53,7 +60,8 @@ typedef struct s_redir
 	t_type			type;
 	char			*file;
 	struct s_redir	*next;
-	int				is_delimeter_quoted;
+	int				delimiter_quoted;
+	int				heredoc_fd;
 }	t_redir;
 
 typedef struct s_cmd
@@ -76,7 +84,18 @@ typedef struct s_shell
 {
 	char	**envp;
 	int		exit_status;
+	int		child_mode;
 }	t_shell;
+
+typedef struct s_expand
+{
+	char		*current;
+	char		*result;
+	char		*mask;
+	t_shell		*shell;
+	t_token		*token;
+	t_quote		quote;
+}	t_expand;
 
 typedef struct s_pipeline
 {
@@ -88,24 +107,37 @@ typedef struct s_pipeline
 /* Executor */
 int		execute(t_shell *shell, t_cmd *cmd);
 int		execute_external(t_shell *shell, t_cmd *cmd);
+int		execute_shell_script(t_shell *shell, t_cmd *cmd, char *path);
 int		execute_builtin(t_shell *shell, t_cmd *cmd);
 int		execute_pipeline(t_shell *shell, t_cmd *cmd);
+void	exit_command_child(t_shell *shell, t_cmd *head, char *path,
+			int status);
+void	exit_pipeline_child(t_shell *shell, t_cmd *head,
+			t_pipeline *pipeline, int status);
+void	run_pipeline_child(t_shell *shell, t_cmd *head, t_cmd *cmd,
+			t_pipeline *pipeline);
 int		is_builtin(char *cmd);
 char	*get_cmd_path(char *cmd, char **envp);
 int		setup_command_redirection(t_cmd *cmd, int saved_fds[2]);
 void	restore_command_redirection(t_cmd *cmd, int saved_fds[2]);
 void	close_command_fds(t_cmd *cmd);
-void	apply_child_redirection(t_cmd *cmd);
+int		apply_child_redirection(t_cmd *cmd);
 int		get_process_status(int wait_status);
 int		print_command_error(char *cmd);
 int		get_execve_error_status(void);
 void	init_pipe_fds(int pipe_fd[2]);
-void	setup_pipeline_fds(t_cmd *cmd, t_pipeline *pipeline, int pipe_fd[2]);
+int		setup_pipeline_fds(t_cmd *cmd, t_pipeline *pipeline, int pipe_fd[2]);
 void	close_other_command_fds(t_cmd *head, t_cmd *current);
 void	close_pipeline_fds(t_cmd *cmd, int prev_fd);
 int		init_pipeline(t_shell *shell, t_pipeline *pipeline, int count);
 int		wait_pipeline(t_pipeline *pipeline);
+int		count_pipeline_commands(t_cmd *cmd);
 int		prepare_command_redirections(t_cmd *cmd);
+int		prepare_heredocs(t_shell *shell, t_cmd *cmd);
+int		open_heredoc_file(int fds[2]);
+void	close_heredoc_fds(t_redir *redir);
+void	print_heredoc_warning(char *delimiter);
+int		write_heredoc_line(int fd, char *line, t_redir *redir, t_shell *shell);
 
 /* Builtins */
 int		builtin_echo(t_cmd *cmd);
@@ -149,8 +181,8 @@ int		add_back_pipe(t_token **head, t_token *new_token);
 /* Parser */
 int		add_argv(t_cmd *current, char *word);
 void	redir_add_back(t_redir **head, t_redir *new);
-t_redir	*new_redir(t_type type, char *file);
-int		add_redir(t_cmd *current, t_type type, char *file);
+t_redir	*new_redir(t_type type, char *file, int quoted);
+int		add_redir(t_cmd *current, t_type type, char *file, int quoted);
 t_cmd	*new_cmd(void);
 t_cmd	*parse_tokens(t_token *tokens);
 void	free_cmd(t_cmd *cmd);
@@ -160,23 +192,30 @@ int		count_arg(char **arg);
 int		cmd_validation(t_cmd *cmd);
 
 /* Expander */
-int		parse_env(char *envp, char **key, char **value);
-t_env	*read_env(char **envp);
-char	*get_value_of_env(t_env *env, char *key);
-void	free_env(t_env *env);
-void	expand_tokens(t_token *tokens, t_env *env, t_shell *shell);
+int		expand_tokens(t_token *tokens, t_shell *shell);
 char	*extract_var_name(char *str);
-void	expand_word(t_token *tokens, t_env *env, t_shell *shell);
+int		expand_word(t_token *token, t_shell *shell, int expand_variables);
 t_quote	quote_states(char **current, t_quote quote);
-void	appeand_exit_status(char **current, char **result, t_shell *shell);
 int		quote_check(char **current, t_quote *quote);
-void	appeand_string(char **result, char *str);
+char	*expand_heredoc_line(char *line, t_shell *shell);
+int		expand_append_text(t_expand *expand, char *text);
+int		expand_append_char(t_expand *expand);
+int		expand_append_status(t_expand *expand);
+int		expand_append_variable(t_expand *expand);
+int		split_expanded_word(t_token *token, char *mask);
+
+/* Signals */
+void	set_signal_handler(int signal_number, void (*handler)(int));
+void	set_interactive_signals(void);
+void	set_wait_signals(void);
+void	set_child_signals(void);
+void	set_heredoc_signals(void);
+void	report_signal_status(int status);
 
 /* Debug */
 void	print_redir(t_redir *redir);
 char	*redir_name(t_type type);
 void	print_argv(char **argv);
 void	print_cmd(t_cmd *cmd);
-void	print_env(t_env *env);
 
 #endif

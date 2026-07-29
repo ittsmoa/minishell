@@ -6,7 +6,7 @@
 /*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/30 19:36:39 by maradweh          #+#    #+#             */
-/*   Updated: 2026/07/19 20:45:49 by maradweh         ###   ########.fr       */
+/*   Updated: 2026/07/28 23:40:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ int	add_argv(t_cmd *current, char *word)
 	if (!current || !word)
 		return (1);
 	i = -1;
-	new_argv = NULL;
 	size = count_arg(current->argv);
 	new_argv = malloc(sizeof(char *) * (size + 2));
 	if (!new_argv)
@@ -30,10 +29,7 @@ int	add_argv(t_cmd *current, char *word)
 		new_argv[i] = current->argv[i];
 	new_argv[i] = ft_strdup(word);
 	if (!new_argv[i])
-	{
-		free(new_argv);
-		return (1);
-	}
+		return (free(new_argv), 1);
 	new_argv[i + 1] = NULL;
 	free(current->argv);
 	current->argv = new_argv;
@@ -57,7 +53,7 @@ void	redir_add_back(t_redir **head, t_redir *new)
 	tmp->next = new;
 }
 
-t_redir	*new_redir(t_type type, char *file)
+t_redir	*new_redir(t_type type, char *file, int quoted)
 {
 	t_redir	*redir;
 
@@ -67,23 +63,22 @@ t_redir	*new_redir(t_type type, char *file)
 	redir->type = type;
 	redir->file = ft_strdup(file);
 	if (!redir->file)
-	{
-		free(redir);
-		return (NULL);
-	}
+		return (free(redir), NULL);
+	redir->delimiter_quoted = quoted;
+	redir->heredoc_fd = -1;
 	redir->next = NULL;
 	return (redir);
 }
 
-int	add_redir(t_cmd *current, t_type type, char *file)
+int	add_redir(t_cmd *current, t_type type, char *file, int quoted)
 {
 	t_redir	*redir;
 
-	if (!current || !file || file[0] == '\0')
+	if (!current || !file)
 		return (1);
 	if (!ft_is_redir(type))
 		return (1);
-	redir = new_redir(type, file);
+	redir = new_redir(type, file, quoted);
 	if (!redir)
 		return (1);
 	redir_add_back(&current->redirs, redir);
@@ -94,7 +89,6 @@ t_cmd	*new_cmd(void)
 {
 	t_cmd	*cmd;
 
-	cmd = NULL;
 	cmd = malloc(sizeof(t_cmd));
 	if (!cmd)
 		return (NULL);

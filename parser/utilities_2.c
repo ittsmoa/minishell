@@ -6,7 +6,7 @@
 /*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/27 22:08:34 by maradweh          #+#    #+#             */
-/*   Updated: 2026/07/18 13:23:49 by maradweh         ###   ########.fr       */
+/*   Updated: 2026/07/28 23:45:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,8 @@ int	handle_redir_right(char *line, int i, t_token **head)
 		add_back(head, new_token(APPEND, ">>"));
 		return (i + 2);
 	}
-	else
-	{
-		add_back(head, new_token(REDIR_OUT, ">"));
-		return (i + 1);
-	}
+	add_back(head, new_token(REDIR_OUT, ">"));
+	return (i + 1);
 }
 
 int	handle_redir_left(char *line, int i, t_token **head)
@@ -33,21 +30,24 @@ int	handle_redir_left(char *line, int i, t_token **head)
 		add_back(head, new_token(HEREDOC, "<<"));
 		return (i + 2);
 	}
-	else
-	{
-		add_back(head, new_token(REDIR_IN, "<"));
-		return (i + 1);
-	}
+	add_back(head, new_token(REDIR_IN, "<"));
+	return (i + 1);
 }
 
 int	has_ampersand(char *s)
 {
-	int	i;
+	char	quote;
+	int		i;
 
 	i = 0;
+	quote = 0;
 	while (s[i])
 	{
-		if (s[i] == '&')
+		if (!quote && (s[i] == '\'' || s[i] == '"'))
+			quote = s[i];
+		else if (quote && s[i] == quote)
+			quote = 0;
+		else if (!quote && s[i] == '&')
 			return (1);
 		i++;
 	}

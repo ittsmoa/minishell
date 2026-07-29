@@ -6,94 +6,81 @@
 /*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/11 23:36:10 by maradweh          #+#    #+#             */
-/*   Updated: 2026/07/19 11:46:14 by maradweh         ###   ########.fr       */
+/*   Updated: 2026/07/29 02:30:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static	void	replace_key_with_val(char **current, char **key,
-		t_env	*env, char	**result)
+static int	expand_current(t_expand *expand)
 {
-	char	*tmp;
-	char	*value;
+	if (expand->current[0] == '$' && expand->current[1] == '?')
+		return (expand_append_status(expand));
+	if (expand->current[0] == '$' && (ft_isalnum(expand->current[1])
+			|| expand->current[1] == '_'))
+		return (expand_append_variable(expand));
+	return (expand_append_char(expand));
+}
 
-	value = NULL;
-	tmp = NULL;
-	if (!*result || !*current || !*key || !env)
-		return ;
-	value = get_value_of_env(env, *key);
-	if (value)
+static int	init_expand(t_expand *expand, t_token *token, t_shell *shell)
+{
+	expand->result = ft_strdup("");
+	expand->mask = ft_strdup("");
+	if (!expand->result || !expand->mask)
 	{
-		tmp = *result;
-		*result = ft_strjoin(tmp, value);
-		free(tmp);
+		free(expand->result);
+		free(expand->mask);
+		return (1);
 	}
-	*current += 1 + ft_strlen(*key);
-	free(*key);
-	*key = NULL;
+	expand->current = token->value;
+	expand->shell = shell;
+	expand->token = token;
+	expand->quote = UNQUOTED;
+	return (0);
 }
 
-static	void	appeand_char(char c, char **current, char **result)
+int	expand_word(t_token *token, t_shell *shell, int expand_variables)
 {
-	char	tmp[2];
+	t_expand	expand;
 
-	tmp[0] = c;
-	tmp[1] = '\0';
-	appeand_string(result, tmp);
-	(*current)++;
-}
-
-static	void	expand_string(char	**result, char	**current,
-		t_env	*env)
-{
-	char	*key;
-
-	key = NULL;
-	if (!(*current) || !(*result) || !env)
-		return ;
-	key = extract_var_name(((*current) + 1));
-	if (key)
-		replace_key_with_val(current, &key, env, result);
-	else
-		appeand_char(**current, current, result);
-}
-
-static	void	exp_word(char	**current, char	**result,
-	t_env	*env, t_shell *shell)
-{
-	t_quote	quote;
-
-	if (!(*current) || !(*result) || !env)
-		return ;
-	quote = UNQUOTED;
-	while (**current)
+	if (init_expand(&expand, token, shell))
+		return (1);
+	while (*expand.current)
 	{
-		if (quote_check(current, &quote))
-			continue ;
-		if (!**current)
-			return ;
-		else if (**current == '$' && quote != SINGEL && (*current)[1] == '?')
-			appeand_exit_status(current, result, shell);
-		else if (**current == '$' && ft_isalnum((*current)[1])
-			&& quote != SINGEL)
-			expand_string(result, current, env);
-		else
-			appeand_char(**current, current, result);
+		if (quote_check(&expand.current, &expand.quote))
+			token->quoted = 1;
+		else if (expand_variables && expand.quote != SINGEL
+			&& expand_current(&expand))
+			return (free(expand.result), free(expand.mask), 1);
+		else if ((!expand_variables || expand.quote == SINGEL)
+			&& expand_append_char(&expand))
+			return (free(expand.result), free(expand.mask), 1);
 	}
+	free(token->value);
+	token->value = expand.result;
+	token->expanded = 1;
+	if (expand_variables && split_expanded_word(token, expand.mask))
+		return (free(expand.mask), 1);
+	free(expand.mask);
+	return (0);
 }
-/*add '_' to ft_isalnum*/
 
-void	expand_word(t_token	*tokens, t_env	*env, t_shell *shell)
+char	*expand_heredoc_line(char *line, t_shell *shell)
 {
-	char	*result;
-	char	*current;
+	t_expand	expand;
 
-	result = ft_strdup("");
-	current = tokens->value;
-	if (!result)
-		return ;
-	exp_word(&current, &result, env, shell);
-	free (tokens->value);
-	tokens->value = result;
+	expand.result = ft_strdup("");
+	if (!expand.result)
+		return (NULL);
+	expand.mask = NULL;
+	expand.current = line;
+	expand.shell = shell;
+	expand.token = NULL;
+	expand.quote = UNQUOTED;
+	while (*expand.current)
+	{
+		if (expand_current(&expand))
+			return (free(expand.result), NULL);
+	}
+	return (expand.result);
 }

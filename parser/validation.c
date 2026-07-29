@@ -6,25 +6,21 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/16 00:17:51 by maradweh          #+#    #+#             */
-/*   Updated: 2026/07/25 19:57:10 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/28 23:46:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static	int	is_redir(t_type type)
+static int	is_redir(t_type type)
 {
-	if (!type)
-		return (0);
-	if (type == REDIR_IN
-		|| type == REDIR_OUT
-		|| type == HEREDOC
-		|| type == APPEND)
+	if (type == REDIR_IN || type == REDIR_OUT
+		|| type == HEREDOC || type == APPEND)
 		return (1);
 	return (0);
 }
 
-static	int	validate_operators(t_token	*tmp, t_shell	*shell)
+static int	validate_operators(t_token *tmp, t_shell *shell)
 {
 	if (tmp->type == PIPE)
 	{
@@ -32,8 +28,6 @@ static	int	validate_operators(t_token	*tmp, t_shell	*shell)
 			return (error_msg("invalid pipe", shell));
 		if (tmp->next->type == PIPE)
 			return (error_msg("|", shell));
-		if (is_redir(tmp->next->type))
-			return (error_msg(tmp->next->value, shell));
 	}
 	else if (tmp->value && ft_strncmp(tmp->value, "&&", 3) == 0)
 		return (error_msg("&&", shell));
@@ -62,7 +56,7 @@ int	ft_is_valid(t_token *tokens, t_shell *shell)
 			if (tmp->next->type != WORD)
 				return (error_msg(tmp->next->value, shell));
 		}
-		else if (validate_operators(tmp, shell) == 0)
+		else if (!validate_operators(tmp, shell))
 			return (0);
 		tmp = tmp->next;
 	}

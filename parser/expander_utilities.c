@@ -6,81 +6,97 @@
 /*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/11 12:42:59 by maradweh          #+#    #+#             */
-/*   Updated: 2026/07/19 06:01:24 by maradweh         ###   ########.fr       */
+/*   Updated: 2026/07/29 02:40:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	free_env(t_env *env)
+static char	*build_mask(t_expand *expand, char *text)
 {
-	t_env	*next;
+	char	*new_mask;
+	size_t	old_len;
+	size_t	text_len;
 
-	while (env)
-	{
-		next = env->next;
-		free(env->key);
-		free(env->value);
-		free(env);
-		env = next;
-	}
+	old_len = ft_strlen(expand->mask);
+	text_len = ft_strlen(text);
+	new_mask = malloc(old_len + text_len + 1);
+	if (!new_mask)
+		return (NULL);
+	ft_memcpy(new_mask, expand->mask, old_len);
+	ft_memset(new_mask + old_len, '0'
+		+ (expand->quote != UNQUOTED), text_len);
+	new_mask[old_len + text_len] = '\0';
+	return (new_mask);
 }
 
-int	parse_env(char *envp, char **key, char **value)
+int	expand_append_text(t_expand *expand, char *text)
 {
-	char	*equal;
+	char	*joined;
+	char	*new_mask;
 
-	if (!envp || !key || !value)
+	if (!text)
 		return (0);
-	equal = NULL;
-	equal = ft_strchr(envp, '=');
-	if (equal)
+	joined = ft_strjoin(expand->result, text);
+	if (!joined)
+		return (1);
+	new_mask = NULL;
+	if (expand->token)
 	{
-		*key = ft_substr(envp, 0, equal - envp);
-		*value = ft_strdup(equal + 1);
-		if (!*key || !*value)
-		{
-			free(*key);
-			free(*value);
-			*key = NULL;
-			*value = NULL;
-			return (0);
-		}
+		new_mask = build_mask(expand, text);
+		if (!new_mask)
+			return (free(joined), 1);
 	}
-	else
-		return (0);
+	free(expand->result);
+	free(expand->mask);
+	expand->result = joined;
+	expand->mask = new_mask;
+	return (0);
+}
+
+int	expand_append_char(t_expand *expand)
+{
+	char	text[2];
+
+	text[0] = *expand->current;
+	text[1] = '\0';
+	expand->current++;
+	return (expand_append_text(expand, text));
+}
+
+static int	ambiguous_redirect(t_token *token, t_shell *shell)
+{
+	ft_putstr_fd("minishell: ", 2);
+	if (token->value[0])
+	{
+		ft_putstr_fd(token->value, 2);
+		ft_putstr_fd(": ", 2);
+	}
+	ft_putstr_fd("ambiguous redirect\n", 2);
+	shell->exit_status = 1;
 	return (1);
 }
 
-void	print_env(t_env *env)
+int	expand_tokens(t_token *tokens, t_shell *shell)
 {
-	while (env)
-	{
-		printf("KEY=[%s]\n", env->key);
-		printf("VALUE=[%s]\n", env->value);
-		printf("----------------\n");
-		env = env->next;
-	}
-}
+	t_token	*previous;
+	int		expand_variables;
 
-char	*get_value_of_env(t_env *env, char *key)
-{
-	while (env)
-	{
-		if (ft_strlen(env->key) == ft_strlen(key)
-			&& ft_strncmp(env->key, key, ft_strlen(key)) == 0)
-			return (env->value);
-		env = env->next;
-	}
-	return (NULL);
-}
-
-void	expand_tokens(t_token *tokens, t_env *env, t_shell *shell)
-{
+	previous = NULL;
 	while (tokens)
 	{
-		if (tokens->type == WORD)
-			expand_word(tokens, env, shell);
+		if (tokens->type == WORD && !tokens->expanded)
+		{
+			expand_variables = (!previous || previous->type != HEREDOC);
+			if (expand_word(tokens, shell, expand_variables))
+				return (shell->exit_status = 1, 1);
+			if (previous && ft_is_redir(previous->type)
+				&& previous->type != HEREDOC
+				&& (tokens->skip || tokens->ambiguous))
+				return (ambiguous_redirect(tokens, shell));
+		}
+		previous = tokens;
 		tokens = tokens->next;
 	}
+	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/16 11:30:02 by moatieh           #+#    #+#             */
-/*   Updated: 2026/05/16 11:30:02 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/29 01:15:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,16 +44,14 @@ char	**copy_envp(char **envp)
 	if (!copy)
 		return (NULL);
 	i = 0;
+	copy[0] = NULL;
 	while (envp[i])
 	{
 		copy[i] = ft_strdup(envp[i]);
 		if (!copy[i])
-		{
-			free_envp(copy);
-			return (NULL);
-		}
+			return (free_envp(copy), NULL);
 		i++;
+		copy[i] = NULL;
 	}
-	copy[i] = NULL;
 	return (copy);
 }
