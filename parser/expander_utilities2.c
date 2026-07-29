@@ -6,29 +6,26 @@
 /*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/17 07:41:36 by maradweh          #+#    #+#             */
-/*   Updated: 2026/07/19 11:45:52 by maradweh         ###   ########.fr       */
+/*   Updated: 2026/07/29 00:09:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-char	*extract_var_name(char	*str)
+char	*extract_var_name(char *str)
 {
 	char	*start;
 	size_t	len;
-	char	*key;
 
 	if (!str)
 		return (NULL);
-	key = NULL;
 	start = str;
-	while ((ft_isalnum(*str) || *str == '_'))
+	while (ft_isalnum(*str) || *str == '_')
 		str++;
 	len = str - start;
 	if (len == 0)
 		return (NULL);
-	key = ft_substr(start, 0, len);
-	return (key);
+	return (ft_substr(start, 0, len));
 }
 
 t_quote	quote_states(char **current, t_quote quote)
@@ -51,35 +48,10 @@ t_quote	quote_states(char **current, t_quote quote)
 	return (quote);
 }
 
-void	appeand_exit_status(char **current, char **result, t_shell *shell)
+int	quote_check(char **current, t_quote *quote)
 {
-	char	*tmp;
-	char	*exit_code_str;
-
-	if (!current || !result
-		|| !shell || !*current || !*result)
-	{
-		return ;
-	}
-	exit_code_str = ft_itoa(shell->exit_status);
-	tmp = malloc(sizeof(char) * ft_strlen(*current));
-	if (!tmp)
-		return ;
-	tmp = *result;
-	*result = ft_strjoin(tmp, exit_code_str);
-	if (!result || !*result)
-	{
-		free(tmp);
-		return ;
-	}
-	free (tmp);
-	free (exit_code_str);
-	*current += 2;
-}
-
-int	quote_check(char	**current, t_quote	*quote)
-{
-	if (**current == '\'' || **current == '"')
+	if ((**current == '\'' && *quote != DOUBLE)
+		|| (**current == '"' && *quote != SINGEL))
 	{
 		*quote = quote_states(current, *quote);
 		return (1);

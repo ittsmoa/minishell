@@ -6,7 +6,7 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/09 00:00:00 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/09 00:00:00 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/28 23:56:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,15 @@
 
 int	execute(t_shell *shell, t_cmd *cmd)
 {
-	if (!cmd || !cmd->argv || !cmd->argv[0])
-		return (0);
+	if (!cmd)
+		return (shell->exit_status = 0, 0);
 	if (cmd->next)
 		return (execute_pipeline(shell, cmd));
+	if (!cmd->argv || !cmd->argv[0])
+	{
+		shell->exit_status = 0;
+		return (0);
+	}
 	if (is_builtin(cmd->argv[0]))
 		return (execute_builtin(shell, cmd));
 	return (execute_external(shell, cmd));

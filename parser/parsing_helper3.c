@@ -34,6 +34,8 @@ void	free_redir(t_redir *redir)
 	while (redir)
 	{
 		tmp = redir->next;
+		if (redir->heredoc_fd != -1)
+			close(redir->heredoc_fd);
 		free(redir->file);
 		free(redir);
 		redir = tmp;

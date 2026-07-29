@@ -43,7 +43,6 @@ int	execute_builtin(t_shell *shell, t_cmd *cmd)
 		return (1);
 	}
 	status = run_builtin(shell, cmd);
-	fflush(stdout);
 	restore_command_redirection(cmd, saved_fds);
 	shell->exit_status = status;
 	return (status);

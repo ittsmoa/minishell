@@ -7,17 +7,22 @@ LIBFT_DIR = libft
 LIBFT = $(LIBFT_DIR)/libft.a
 
 SRC = src/main.c \
+      src/signals.c \
+      src/signal_modes.c \
       src/executor/executor.c \
       src/exec_external.c \
       src/executor/get_cmd_path.c \
       src/executor/is_builtin.c \
       src/executor/execute_builtin.c \
       src/executor/execute_pipeline.c \
+      src/executor/pipeline_child.c \
       src/executor/pipeline_utils.c \
       src/executor/pipeline_status.c \
       src/executor/execution_status.c \
       src/executor/command_redirection.c \
       src/executor/prepare_redirections.c \
+      src/executor/heredoc.c \
+      src/executor/heredoc_utils.c \
       src/builtins/builtin_pwd.c \
       src/builtins/builtin_echo.c \
       src/builtins/builtin_env.c \
@@ -42,6 +47,7 @@ SRC = src/main.c \
       parser/parsing_helper3.c \
       parser/parser_validation.c \
       parser/expander_env.c \
+      parser/expander_split.c \
       parser/expander_utilities.c \
       parser/expander_utilities2.c \
       parser/expander.c
@@ -55,19 +61,20 @@ $(NAME): $(LIBFT) $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) $(LDFLAGS) -o $(NAME)
 
 $(LIBFT):
-	make -C $(LIBFT_DIR)
+	$(MAKE) -C $(LIBFT_DIR)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	make clean -C $(LIBFT_DIR)
+	$(MAKE) clean -C $(LIBFT_DIR)
 	rm -f $(OBJ)
 
 fclean: clean
-	make fclean -C $(LIBFT_DIR)
+	$(MAKE) fclean -C $(LIBFT_DIR)
 	rm -f $(NAME)
 
-re: fclean all
+re: fclean
+	$(MAKE) all
 
 .PHONY: all clean fclean re

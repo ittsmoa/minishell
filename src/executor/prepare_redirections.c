@@ -6,7 +6,7 @@
 /*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 20:00:00 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/25 20:00:00 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/29 00:45:00 by moatieh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,17 @@
 
 static int	open_redir_file(t_redir *redir)
 {
+	int	fd;
+
 	if (redir->type == REDIR_IN)
 		return (open(redir->file, O_RDONLY));
 	if (redir->type == REDIR_OUT)
 		return (open(redir->file, O_CREAT | O_WRONLY | O_TRUNC, 0644));
 	if (redir->type == APPEND)
 		return (open(redir->file, O_CREAT | O_WRONLY | O_APPEND, 0644));
-	ft_putstr_fd("minishell: heredoc is not connected yet\n", 2);
-	return (-1);
+	fd = redir->heredoc_fd;
+	redir->heredoc_fd = -1;
+	return (fd);
 }
 
 static void	set_redir_fd(t_cmd *cmd, t_redir *redir, int fd)
@@ -51,8 +54,7 @@ static int	prepare_one_command_redirs(t_cmd *cmd)
 		fd = open_redir_file(redir);
 		if (fd == -1)
 		{
-			if (redir->type != HEREDOC)
-				perror(redir->file);
+			perror(redir->file);
 			return (1);
 		}
 		set_redir_fd(cmd, redir, fd);

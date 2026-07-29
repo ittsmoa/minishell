@@ -26,6 +26,6 @@ int	builtin_pwd(t_cmd *cmd)
 		perror("pwd");
 		return (1);
 	}
-	printf("%s\n", cwd);
+	ft_putendl_fd(cwd, STDOUT_FILENO);
 	return (0);
 }

@@ -26,6 +26,10 @@ t_token	*new_token(t_type t, char *v)
 		free(tmp);
 		return (NULL);
 	}
+	tmp->quoted = 0;
+	tmp->skip = 0;
+	tmp->ambiguous = 0;
+	tmp->expanded = 0;
 	tmp->next = NULL;
 	return (tmp);
 }
