@@ -8,6 +8,7 @@ LIBFT = $(LIBFT_DIR)/libft.a
 
 SRC = src/main.c \
       src/signals.c \
+      src/read_command_line.c \
       src/signal_modes.c \
       src/executor/executor.c \
       src/exec_external.c \

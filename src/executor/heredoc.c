@@ -18,7 +18,7 @@ static int	read_heredoc(t_shell *shell, t_redir *redir, int fd)
 
 	while (1)
 	{
-		line = readline("> ");
+		line = read_command_line("> ");
 		if (!line)
 		{
 			print_heredoc_warning(redir->file);

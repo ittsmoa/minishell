@@ -36,7 +36,7 @@ int	builtin_exit(t_shell *shell, t_cmd *cmd)
 	int	status;
 
 	status = shell->exit_status;
-	if (!shell->child_mode)
+	if (!shell->child_mode && isatty(STDIN_FILENO))
 		write(1, "exit\n", 5);
 	if (cmd->argv[1] && (!exit_is_numeric_arg(cmd->argv[1])
 			|| parse_exit_value(cmd->argv[1], &status)))

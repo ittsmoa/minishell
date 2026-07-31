@@ -67,6 +67,8 @@ static int	is_ignored_line(char *line)
 
 static int	handle_line(t_shell *shell, char *line)
 {
+	int	status;
+
 	if (g_signal == SIGINT)
 	{
 		shell->exit_status = 130;
@@ -74,13 +76,16 @@ static int	handle_line(t_shell *shell, char *line)
 	}
 	if (!line)
 	{
-		write(1, "exit\n", 5);
+		if (isatty(STDIN_FILENO))
+			write(1, "exit\n", 5);
 		return (1);
 	}
 	if (is_ignored_line(line))
 		return (0);
 	add_history(line);
-	parse_and_execute(shell, line);
+	status = parse_and_execute(shell, line);
+	if (status && shell->exit_status == 2 && !isatty(STDIN_FILENO))
+		return (1);
 	return (0);
 }
 
@@ -101,7 +106,7 @@ int	main(int argc, char **argv, char **envp)
 	set_interactive_signals();
 	while (!should_exit)
 	{
-		line = readline("minishell$ ");
+		line = read_command_line("minishell$ ");
 		should_exit = handle_line(&shell, line);
 		free(line);
 	}
