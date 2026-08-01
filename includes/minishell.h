@@ -62,7 +62,22 @@ typedef struct s_redir
 	struct s_redir	*next;
 	int				delimiter_quoted;
 	int				heredoc_fd;
+	pid_t			heredoc_pid;
 }	t_redir;
+
+typedef struct s_heredoc_buffer
+{
+	char	*data;
+	size_t	length;
+	size_t	capacity;
+}	t_heredoc_buffer;
+
+typedef struct s_heredoc_io
+{
+	int		data[2];
+	int		ready[2];
+	pid_t	pid;
+}	t_heredoc_io;
 
 typedef struct s_cmd
 {
@@ -134,10 +149,16 @@ int		wait_pipeline(t_pipeline *pipeline);
 int		count_pipeline_commands(t_cmd *cmd);
 int		prepare_command_redirections(t_cmd *cmd);
 int		prepare_heredocs(t_shell *shell, t_cmd *cmd);
-int		open_heredoc_file(int fds[2]);
+int		init_heredoc_io(t_heredoc_io *io);
+void	close_heredoc_io(t_heredoc_io *io);
+int		finish_heredoc_io(t_shell *shell, t_redir *redir,
+			t_heredoc_io *io);
+void	wait_heredoc_writer(pid_t pid);
 void	close_heredoc_fds(t_redir *redir);
 void	print_heredoc_warning(char *delimiter);
-int		write_heredoc_line(int fd, char *line, t_redir *redir, t_shell *shell);
+int		append_heredoc_line(t_heredoc_buffer *buffer, char *line,
+			t_redir *redir, t_shell *shell);
+int		write_heredoc_buffer(int fd, t_heredoc_buffer *buffer);
 
 /* Builtins */
 int		builtin_echo(t_cmd *cmd);

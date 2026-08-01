@@ -36,6 +36,7 @@ void	free_redir(t_redir *redir)
 		tmp = redir->next;
 		if (redir->heredoc_fd != -1)
 			close(redir->heredoc_fd);
+		wait_heredoc_writer(redir->heredoc_pid);
 		free(redir->file);
 		free(redir);
 		redir = tmp;

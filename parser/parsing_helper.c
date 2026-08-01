@@ -66,6 +66,7 @@ t_redir	*new_redir(t_type type, char *file, int quoted)
 		return (free(redir), NULL);
 	redir->delimiter_quoted = quoted;
 	redir->heredoc_fd = -1;
+	redir->heredoc_pid = -1;
 	redir->next = NULL;
 	return (redir);
 }

@@ -12,7 +12,8 @@
 
 #include "../../includes/minishell.h"
 
-static int	read_heredoc(t_shell *shell, t_redir *redir, int fd)
+static int	read_heredoc(t_shell *shell, t_redir *redir,
+		t_heredoc_buffer *buffer)
 {
 	char	*line;
 
@@ -29,73 +30,54 @@ static int	read_heredoc(t_shell *shell, t_redir *redir, int fd)
 			free(line);
 			return (0);
 		}
-		if (write_heredoc_line(fd, line, redir, shell))
+		if (append_heredoc_line(buffer, line, redir, shell))
 			return (free(line), 1);
 		free(line);
 	}
 }
 
 static void	heredoc_child(t_shell *shell, t_cmd *head, t_redir *redir,
-		int fds[2])
+		t_heredoc_io *io)
 {
-	int	status;
+	t_heredoc_buffer	buffer;
+	char				ready;
+	int					status;
 
-	close(fds[0]);
+	close(io->data[0]);
+	close(io->ready[0]);
 	set_heredoc_signals();
-	status = read_heredoc(shell, redir, fds[1]);
-	close(fds[1]);
-	free_cmd(head);
-	free_envp(shell->envp);
-	rl_clear_history();
-	exit(status);
-}
-
-static int	wait_heredoc(t_shell *shell, pid_t pid, int fds[2])
-{
-	int	status;
-	int	exit_status;
-
-	close(fds[1]);
-	if (waitpid(pid, &status, 0) == -1)
-	{
-		close(fds[0]);
-		set_interactive_signals();
-		return (perror("waitpid"), shell->exit_status = 1, 1);
-	}
-	report_signal_status(status);
-	set_interactive_signals();
-	exit_status = get_process_status(status);
-	if (exit_status)
-	{
-		close(fds[0]);
-		shell->exit_status = exit_status;
-		return (1);
-	}
-	return (0);
+	buffer.data = NULL;
+	buffer.length = 0;
+	buffer.capacity = 0;
+	status = read_heredoc(shell, redir, &buffer);
+	ready = (status == 0);
+	if (write(io->ready[1], &ready, 1) != 1)
+		status = 1;
+	close(io->ready[1]);
+	if (!status)
+		status = write_heredoc_buffer(io->data[1], &buffer);
+	free(buffer.data);
+	close(io->data[1]);
+	exit_command_child(shell, head, NULL, status);
 }
 
 static int	collect_heredoc(t_shell *shell, t_cmd *head, t_redir *redir)
 {
-	int		fds[2];
-	pid_t	pid;
+	t_heredoc_io	io;
 
-	if (open_heredoc_file(fds))
+	if (init_heredoc_io(&io))
 		return (shell->exit_status = 1, 1);
 	set_wait_signals();
-	pid = fork();
-	if (pid == -1)
+	io.pid = fork();
+	if (io.pid == -1)
 	{
-		close(fds[0]);
-		close(fds[1]);
+		close_heredoc_io(&io);
 		set_interactive_signals();
 		return (perror("fork"), shell->exit_status = 1, 1);
 	}
-	if (pid == 0)
-		heredoc_child(shell, head, redir, fds);
-	if (wait_heredoc(shell, pid, fds))
-		return (1);
-	redir->heredoc_fd = fds[0];
-	return (0);
+	if (io.pid == 0)
+		heredoc_child(shell, head, redir, &io);
+	return (finish_heredoc_io(shell, redir, &io));
 }
 
 int	prepare_heredocs(t_shell *shell, t_cmd *cmd)

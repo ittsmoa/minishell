@@ -12,45 +12,29 @@
 
 #include "../../includes/minishell.h"
 
-static char	*heredoc_temp_path(int index)
+static int	grow_heredoc_buffer(t_heredoc_buffer *buffer, size_t needed)
 {
-	char	*number;
-	char	*path;
+	char	*data;
+	size_t	capacity;
 
-	number = ft_itoa(index);
-	if (!number)
-		return (NULL);
-	path = ft_strjoin("/tmp/.minishell_heredoc_", number);
-	free(number);
-	return (path);
-}
-
-int	open_heredoc_file(int fds[2])
-{
-	char	*path;
-	int		index;
-
-	index = 0;
-	while (index < 1000000)
+	if (buffer->capacity >= needed)
+		return (0);
+	capacity = buffer->capacity;
+	if (capacity == 0)
+		capacity = 4096;
+	while (capacity < needed)
+		capacity *= 2;
+	data = malloc(capacity);
+	if (!data)
+		return (1);
+	if (buffer->data)
 	{
-		path = heredoc_temp_path(index++);
-		if (!path)
-			return (1);
-		fds[1] = open(path, O_CREAT | O_EXCL | O_WRONLY, 0600);
-		if (fds[1] != -1)
-		{
-			fds[0] = open(path, O_RDONLY);
-			unlink(path);
-			free(path);
-			if (fds[0] == -1)
-				return (close(fds[1]), perror("heredoc"), 1);
-			return (0);
-		}
-		if (errno != EEXIST)
-			return (free(path), perror("heredoc"), 1);
-		free(path);
+		ft_memcpy(data, buffer->data, buffer->length);
+		free(buffer->data);
 	}
-	return (1);
+	buffer->data = data;
+	buffer->capacity = capacity;
+	return (0);
 }
 
 void	close_heredoc_fds(t_redir *redir)
@@ -74,9 +58,11 @@ void	print_heredoc_warning(char *delimiter)
 	ft_putstr_fd("')\n", 2);
 }
 
-int	write_heredoc_line(int fd, char *line, t_redir *redir, t_shell *shell)
+int	append_heredoc_line(t_heredoc_buffer *buffer, char *line,
+		t_redir *redir, t_shell *shell)
 {
 	char	*output;
+	size_t	length;
 
 	if (redir->delimiter_quoted)
 		output = ft_strdup(line);
@@ -84,12 +70,32 @@ int	write_heredoc_line(int fd, char *line, t_redir *redir, t_shell *shell)
 		output = expand_heredoc_line(line, shell);
 	if (!output)
 		return (1);
-	if (write(fd, output, ft_strlen(output)) == -1
-		|| write(fd, "\n", 1) == -1)
-	{
-		free(output);
-		return (1);
-	}
+	length = ft_strlen(output);
+	if (grow_heredoc_buffer(buffer, buffer->length + length + 2))
+		return (free(output), 1);
+	ft_memcpy(buffer->data + buffer->length, output, length);
+	buffer->length += length;
+	buffer->data[buffer->length++] = '\n';
+	buffer->data[buffer->length] = '\0';
 	free(output);
+	return (0);
+}
+
+int	write_heredoc_buffer(int fd, t_heredoc_buffer *buffer)
+{
+	ssize_t	result;
+	size_t	written;
+
+	written = 0;
+	while (written < buffer->length)
+	{
+		result = write(fd, buffer->data + written,
+				buffer->length - written);
+		if (result == -1 && errno == EINTR)
+			continue ;
+		if (result <= 0)
+			return (1);
+		written += result;
+	}
 	return (0);
 }

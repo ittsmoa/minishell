@@ -23,6 +23,7 @@ SRC = src/main.c \
       src/executor/command_redirection.c \
       src/executor/prepare_redirections.c \
       src/executor/heredoc.c \
+      src/executor/heredoc_pipe.c \
       src/executor/heredoc_utils.c \
       src/builtins/builtin_pwd.c \
       src/builtins/builtin_echo.c \

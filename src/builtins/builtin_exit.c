@@ -14,6 +14,7 @@
 
 static void	exit_cleanup(t_shell *shell, t_cmd *cmd, int status)
 {
+	close(STDIN_FILENO);
 	free_cmd(cmd);
 	free_envp(shell->envp);
 	rl_clear_history();
