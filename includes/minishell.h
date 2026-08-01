@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
+/*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 19:52:32 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/25 19:52:46 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/07/31 21:14:27 by maradweh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,7 @@ typedef struct s_shell
 	char	**envp;
 	int		exit_status;
 	int		child_mode;
+	t_cmd	*cmd;
 }	t_shell;
 
 typedef struct s_expand
@@ -177,7 +178,7 @@ int		has_ampersand(char *s);
 int		ft_is_redir(t_type type);
 char	*remove_quotes(char *argv);
 int		add_back_pipe(t_token **head, t_token *new_token);
-
+void	cleanup_shell(t_shell *shell);
 /* Parser */
 int		add_argv(t_cmd *current, char *word);
 void	redir_add_back(t_redir **head, t_redir *new);
@@ -190,7 +191,7 @@ void	free_argv(char **argv);
 void	free_redir(t_redir *redir);
 int		count_arg(char **arg);
 int		cmd_validation(t_cmd *cmd);
-
+int		validation_redir(t_shell	*shell, t_cmd	*cmd);
 /* Expander */
 int		expand_tokens(t_token *tokens, t_shell *shell);
 char	*extract_var_name(char *str);

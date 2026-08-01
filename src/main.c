@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: moatieh <moatieh@student.42amman.com>      +#+  +:+       +#+        */
+/*   By: maradweh <maradweh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 19:48:18 by moatieh           #+#    #+#             */
-/*   Updated: 2026/07/29 01:25:00 by moatieh          ###   ########.fr       */
+/*   Updated: 2026/08/01 17:05:39 by maradweh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ static t_cmd	*build_command(t_shell *shell, char *line)
 	if (!cmd || cmd_validation(cmd))
 	{
 		shell->exit_status = 1;
-		free_cmd(cmd);
 		return (NULL);
 	}
 	return (cmd);
@@ -46,13 +45,18 @@ static int	parse_and_execute(t_shell *shell, char *line)
 	if (!cmd)
 		return (1);
 	if (prepare_heredocs(shell, cmd))
-		return (free_cmd(cmd), 1);
-	if (!cmd->next && prepare_command_redirections(cmd))
 	{
-		shell->exit_status = 1;
+		free_cmd(cmd);
+		shell->cmd = NULL;
+		return (1);
+	}
+	if (!validation_redir(shell, cmd))
+	{
+		shell->exit_status = 2;
 		free_cmd(cmd);
 		return (1);
 	}
+	shell->cmd = cmd;
 	execute(shell, cmd);
 	free_cmd(cmd);
 	return (0);
@@ -98,14 +102,17 @@ int	main(int argc, char **argv, char **envp)
 	shell.exit_status = 0;
 	shell.child_mode = 0;
 	should_exit = 0;
+	shell.cmd = NULL;
 	set_interactive_signals();
 	while (!should_exit)
 	{
 		line = readline("minishell$ ");
 		should_exit = handle_line(&shell, line);
+		if (should_exit)
+			break ;
 		free(line);
 	}
-	free_envp(shell.envp);
+	cleanup_shell(&shell);
 	rl_clear_history();
 	return (shell.exit_status);
 }

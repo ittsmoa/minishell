@@ -41,6 +41,7 @@ SRC = src/main.c \
       parser/utilities_1.c \
       parser/validation.c \
       parser/utilities_2.c \
+      parser/utilities3.c \
       parser/parsing.c \
       parser/parsing_helper.c \
       parser/parsing_helper2.c \
@@ -50,7 +51,7 @@ SRC = src/main.c \
       parser/expander_split.c \
       parser/expander_utilities.c \
       parser/expander_utilities2.c \
-      parser/expander.c
+      parser/expander.c 
 
 OBJ = $(SRC:.c=.o)
 LDFLAGS = -lreadline
