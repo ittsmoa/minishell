@@ -68,3 +68,10 @@ char	*read_command_line(char *prompt)
 		return (readline(prompt));
 	return (read_stdin_line());
 }
+
+char	*read_heredoc_line(char *prompt)
+{
+	if (isatty(STDIN_FILENO))
+		ft_putstr_fd(prompt, STDOUT_FILENO);
+	return (read_stdin_line());
+}

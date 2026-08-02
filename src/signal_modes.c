@@ -12,6 +12,12 @@
 
 #include "../includes/minishell.h"
 
+static void	handle_heredoc_sigint(int signal_number)
+{
+	g_signal = signal_number;
+	write(STDOUT_FILENO, "\n", 1);
+}
+
 void	set_child_signals(void)
 {
 	set_signal_handler(SIGINT, SIG_DFL);
@@ -20,7 +26,7 @@ void	set_child_signals(void)
 
 void	set_heredoc_signals(void)
 {
-	set_signal_handler(SIGINT, SIG_DFL);
+	set_signal_handler(SIGINT, handle_heredoc_sigint);
 	set_signal_handler(SIGQUIT, SIG_IGN);
 }
 

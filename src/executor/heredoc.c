@@ -19,7 +19,9 @@ static int	read_heredoc(t_shell *shell, t_redir *redir,
 
 	while (1)
 	{
-		line = read_command_line("> ");
+		line = read_heredoc_line("> ");
+		if (g_signal == SIGINT)
+			return (free(line), 130);
 		if (!line)
 		{
 			print_heredoc_warning(redir->file);
@@ -45,11 +47,15 @@ static void	heredoc_child(t_shell *shell, t_cmd *head, t_redir *redir,
 
 	close(io->data[0]);
 	close(io->ready[0]);
+	g_signal = 0;
 	set_heredoc_signals();
 	buffer.data = NULL;
 	buffer.length = 0;
 	buffer.capacity = 0;
 	status = read_heredoc(shell, redir, &buffer);
+	set_signal_handler(SIGINT, SIG_IGN);
+	if (g_signal == SIGINT)
+		status = 130;
 	ready = (status == 0);
 	if (write(io->ready[1], &ready, 1) != 1)
 		status = 1;

@@ -229,6 +229,7 @@ int		split_expanded_word(t_token *token, char *mask);
 void	set_signal_handler(int signal_number, void (*handler)(int));
 void	set_interactive_signals(void);
 char	*read_command_line(char *prompt);
+char	*read_heredoc_line(char *prompt);
 void	set_wait_signals(void);
 void	set_child_signals(void);
 void	set_heredoc_signals(void);
